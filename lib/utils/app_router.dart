@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:recipes/view/login_view.dart';
+import 'package:recipes/view/register_view.dart';
 import 'package:recipes/view/splash_view.dart';
 
 class AppRouter {
@@ -12,6 +13,10 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginView(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterView(),
       ),
     ],
   );

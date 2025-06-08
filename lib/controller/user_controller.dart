@@ -35,7 +35,7 @@ class UserController {
       if (e.type == DioExceptionType.badResponse) {
         int? statusCode = e.response!.statusCode;
         if (statusCode == 404) {
-          throw "Data tidak ditemukan";
+          throw "Data not found";
         }
         throw "error";
       }
@@ -59,7 +59,7 @@ class UserController {
       if (e.type == DioExceptionType.badResponse) {
         int? statusCode = e.response!.statusCode;
         if (statusCode == 404) {
-          throw "Data tidak ditemukan";
+          throw "Data not found";
         }
         throw "error";
       }

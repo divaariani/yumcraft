@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:recipes/bloc/food/food_bloc.dart';
 import 'package:recipes/model/food_model.dart';
 import 'package:recipes/theme/app_colors.dart';
+import 'package:recipes/utils/app_constant.dart';
 import 'package:recipes/utils/app_session_manager.dart';
 
 class FormFoodView extends StatefulWidget {
@@ -53,34 +55,50 @@ class _FormFoodViewState extends State<FormFoodView> {
         image = pickedFile.name;
       });
 
-      await uploadImageToFirebase();
+      await uploadImageToImageKit();
     }
   }
 
-  Future<void> uploadImageToFirebase() async {
-    if (pickedImage != null) {
-      final path = 'files/${pickedImage!.path.split('/').last}';
-      final file = File(pickedImage!.path);
+  Future<void> uploadImageToImageKit() async {
+    if (pickedImage == null) return;
 
-      final ref = FirebaseStorage.instance.ref().child(path);
-      final uploadTask = ref.putFile(file);
+    String fileName = pickedImage!.path.split('/').last;
+    FormData formData = FormData.fromMap({
+      'file':
+          await MultipartFile.fromFile(pickedImage!.path, filename: fileName),
+      'fileName': fileName,
+      'publicKey': imageKitPublicKey,
+    });
 
-      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+    Dio dio = Dio();
+
+    try {
+      final response = await dio.post(
+        'https://upload.imagekit.io/api/v1/files/upload',
+        data: formData,
+        onSendProgress: (sent, total) {
+          setState(() {
+            uploadImageProgress = sent / total;
+          });
+        },
+        options: Options(
+          headers: {
+            'Authorization':
+                'Basic ${base64Encode(utf8.encode(imageKitPrivateKey))}',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
         setState(() {
-          uploadImageProgress = snapshot.bytesTransferred / snapshot.totalBytes;
+          imageUrl = response.data['url'];
         });
-      });
-
-      final snapshot = await uploadTask.whenComplete(() {});
-
-      final urlDownload = await snapshot.ref.getDownloadURL();
-      setState(() {
-        imageUrl = urlDownload;
-      });
-
-      debugPrint('Direct Image Link: $urlDownload');
-    } else {
-      debugPrint('No file selected');
+        debugPrint('Image uploaded: $imageUrl');
+      } else {
+        debugPrint('Failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Upload error: $e');
     }
   }
 

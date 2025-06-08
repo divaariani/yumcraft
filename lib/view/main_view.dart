@@ -101,15 +101,15 @@ class _MainViewState extends State<MainView> {
     return PersistentBottomNavBarItem(
       icon: Icon(
         icon,
-        color: theme.colorScheme.secondary,
+        color: AppColors.color900,
       ),
       inactiveIcon: Icon(
         inactiveIcon,
-        color: theme.colorScheme.secondary,
+        color: AppColors.color900,
       ),
       title: title,
       textStyle: theme.textTheme.bodySmall,
-      activeColorPrimary: theme.colorScheme.secondary,
+      activeColorPrimary: AppColors.color900,
       inactiveColorPrimary: theme.colorScheme.onTertiary,
     );
   }

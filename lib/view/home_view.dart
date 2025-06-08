@@ -196,15 +196,14 @@ class _HomeViewState extends State<HomeView> {
 
             return GestureDetector(
               onTap: () {
-                // GoRouter.of(context).push(
-                //   '/category',
-                //   extra: item,
-                // );
+                GoRouter.of(context).push(
+                  '/food',
+                  extra: item,
+                );
               },
               child: Container(
                 width: 100,
                 height: 100,
-                // margin: const EdgeInsets.only(right: 12),
                 decoration: BoxDecoration(
                   color: AppColors.color200,
                   borderRadius: BorderRadius.circular(12),

@@ -11,6 +11,9 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     on<PostRecipeRequest>((event, emit) async {
       await _postRecipe(event.viewModel!, emit);
     });
+    on<GetRecipesRequest>((event, emit) async {
+      await _getRecipes(event, emit);
+    });
   }
 
   Future<void> _postRecipe(FoodModel viewModel,
@@ -22,6 +25,20 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       emit(PostRecipeSuccess(data));
     } catch (ex) {
       emit(PostRecipeError(errorMessage: ex.toString()));
+    }
+  }
+
+  List<FoodModel>? listRecipes;
+
+  Future<void> _getRecipes(GetRecipesRequest event, Emitter<FoodState> emit) async {
+    FoodController controller = FoodController();
+    emit(GetRecipesLoading());
+    try {
+      List<FoodModel> data = await controller.getRecipes(event.category, event.id);
+      listRecipes = data;
+      emit(GetRecipesSuccess());
+    } catch (ex) {
+      emit(GetRecipesError(errorMessage: ex.toString()));
     }
   }
 }

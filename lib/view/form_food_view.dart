@@ -105,7 +105,7 @@ class _FormFoodViewState extends State<FormFoodView> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            context.pop();
+            GoRouter.of(context).go('/main');
           },
         ),
         elevation: 0,
@@ -297,9 +297,10 @@ class _FormFoodViewState extends State<FormFoodView> {
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 8,
-                  ),
+                  if (ingredients.isNotEmpty)
+                    const SizedBox(
+                      height: 8,
+                    ),
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -376,9 +377,10 @@ class _FormFoodViewState extends State<FormFoodView> {
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 8,
-                  ),
+                  if (steps.isNotEmpty)
+                    const SizedBox(
+                      height: 8,
+                    ),
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),

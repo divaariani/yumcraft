@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:recipes/model/food_model.dart';
 import 'package:recipes/utils/app_constant.dart';
 
@@ -31,8 +32,36 @@ class FoodController {
         }
         throw "error";
       }
-      throw "errorKoneksi";
+      throw "error";
     }
   }
   //END: Post Food
+
+  //START: List Recipe per Category
+  Future<List<FoodModel>> getRecipes(String category, String id) async {
+    try {
+      response = await dio.get(
+        "$baseUrl/foods?food_category=$category&user_id=$id",
+      );
+
+      List<FoodModel> result = (response.data as List)
+          .map((e) => FoodModel.fromJson(e))
+          .toList();
+
+      debugPrint("$result nya");
+      return result;
+    } on DioException catch (e) {
+      debugPrint("DioException recipes: ${e.message}");
+      debugPrint("Status CODE recipes: ${e.response?.statusCode}");
+      if (e.type == DioExceptionType.badResponse) {
+        int? statusCode = e.response!.statusCode;
+        if (statusCode == 404) {
+          throw "Data not found";
+        }
+        throw "error";
+      }
+      throw "error";
+    }
+  }
+  //END: List Recipe per Category
 }

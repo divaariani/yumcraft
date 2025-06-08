@@ -18,3 +18,16 @@ class PostRecipeError extends FoodState {
 
 class PostRecipeWaiting extends FoodState {}
 //End: Post Food
+
+//Start: Get Recipe
+class GetRecipesSuccess extends FoodState {
+  GetRecipesSuccess();
+}
+
+class GetRecipesError extends FoodState {
+  final String? errorMessage;
+  GetRecipesError({this.errorMessage});
+}
+
+class GetRecipesLoading extends FoodState {}
+//End: Get Recipe

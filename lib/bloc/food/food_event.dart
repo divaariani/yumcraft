@@ -7,3 +7,9 @@ class PostRecipeRequest extends FoodEvent {
   final FoodModel? viewModel;
   PostRecipeRequest({this.viewModel});
 }
+
+class GetRecipesRequest extends FoodEvent {
+  final String category;
+  final String id;
+  GetRecipesRequest({required this.category, required this.id});
+}

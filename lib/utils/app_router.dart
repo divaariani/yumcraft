@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:recipes/view/food_view.dart';
 import 'package:recipes/view/form_food_view.dart';
 import 'package:recipes/view/home_view.dart';
 import 'package:recipes/view/login_view.dart';
@@ -28,6 +29,13 @@ class AppRouter {
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeView(),
+      ),
+      GoRoute(
+        path: '/food',
+        builder: (context, state) {
+          final ctg = state.extra as String;
+          return FoodView(category: ctg);
+        },
       ),
       GoRoute(
         path: '/form-food',

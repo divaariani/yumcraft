@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:recipes/bloc/user/user_bloc.dart';
+import 'package:recipes/model/user_model.dart';
 import 'package:recipes/theme/app_colors.dart';
 
 class LoginView extends StatefulWidget {
@@ -10,9 +13,13 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
+  UserBloc userBloc = UserBloc();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
+  bool isLoading = false;
+
+  List<UserModel> users = [];
 
   @override
   void initState() {
@@ -121,23 +128,129 @@ class _LoginViewState extends State<LoginView> {
                   const SizedBox(
                     height: 16,
                   ),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.color600,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  BlocConsumer(
+                    bloc: userBloc,
+                    listener: (context, state) {
+                      if (state is GetUsersSuccess) {
+                        users = userBloc.listUsers ?? [];
+                      }
+
+                      if (state is GetUsersError) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.red,
+                            content:
+                                Text(state.errorMessage ?? "User not found"),
+                          ),
+                        );
+                      }
+
+                      if (state is GetLoginSuccess) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Colors.green,
+                            content: Text("Login successful"),
+                          ),
+                        );
+                        GoRouter.of(context).push('/home');
+                      }
+
+                      if (state is GetLoginError) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text(state.errorMessage ?? "Login failed"),
+                          ),
+                        );
+                      }
+                    },
+                    builder: (context, state) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (emailController.text.isEmpty ||
+                                passwordController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please fill all fields !'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
+                            setState(() {
+                              isLoading = true;
+                            });
+
+                            userBloc.add(GetUsersRequest());
+
+                            await Future.delayed(const Duration(seconds: 1));
+
+                            if (!mounted) return;
+
+                            if (users.isEmpty) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  backgroundColor: Colors.red,
+                                  content: Text("No users found"),
+                                ),
+                              );
+                            } else {
+                              try {
+                                final matchedUser = users.firstWhere(
+                                  (user) =>
+                                      user.email ==
+                                          emailController.text.trim() &&
+                                      user.password ==
+                                          passwordController.text.trim(),
+                                );
+
+                                userBloc.add(
+                                    GetLoginRequest(matchedUser.id ?? "0"));
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      backgroundColor: Colors.red,
+                                      content: Text(
+                                          "Email or password is incorrect")),
+                                );
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.color600,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  'Log In',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.white),
+                                ),
                         ),
-                      ),
-                      child: const Text(
-                        'Log In',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(
                     height: 16,

@@ -36,7 +36,8 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     UserController controller = UserController();
     emit(GetLoginLoading());
     try {
-      userData = await controller.getUserById(event.id);
+      UserModel data = await controller.getUserById(event.id);
+      userData = data;
       emit(GetLoginSuccess());
     } catch (ex) {
       emit(GetLoginError(errorMessage: ex.toString()));

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:recipes/bloc/user/user_bloc.dart';
 import 'package:recipes/model/user_model.dart';
 import 'package:recipes/theme/app_colors.dart';
+import 'package:recipes/utils/app_session_manager.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -24,6 +25,17 @@ class _LoginViewState extends State<LoginView> {
   @override
   void initState() {
     super.initState();
+  }
+
+  void _showSnackbar(String value, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: color,
+      content: Text(value),
+    ));
+  }
+
+  void _navigateTo(String route) {
+    GoRouter.of(context).push(route);
   }
 
   @override
@@ -130,7 +142,7 @@ class _LoginViewState extends State<LoginView> {
                   ),
                   BlocConsumer(
                     bloc: userBloc,
-                    listener: (context, state) {
+                    listener: (context, state) async {
                       if (state is GetUsersSuccess) {
                         users = userBloc.listUsers ?? [];
                       }
@@ -149,25 +161,24 @@ class _LoginViewState extends State<LoginView> {
                       }
 
                       if (state is GetLoginSuccess) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            backgroundColor: Colors.green,
-                            content: Text("Login successful"),
-                          ),
+                        final user = userBloc.userData;
+
+                        await SessionManager().saveUserSession(
+                          user?.id ?? '',
+                          user?.email ?? '',
+                          true,
                         );
-                        GoRouter.of(context).push('/home');
+
+                        _showSnackbar("Login successful", Colors.green);
+                        _navigateTo('/home');
                       }
 
                       if (state is GetLoginError) {
                         setState(() {
                           isLoading = false;
                         });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.red,
-                            content: Text(state.errorMessage ?? "Login failed"),
-                          ),
-                        );
+                        _showSnackbar(
+                            state.errorMessage ?? "Login failed", Colors.red);
                       }
                     },
                     builder: (context, state) {
@@ -194,18 +205,23 @@ class _LoginViewState extends State<LoginView> {
 
                             await Future.delayed(const Duration(seconds: 1));
 
-                            if (!mounted) return;
+                            final userWithEmail = users.firstWhere(
+                              (user) => user.email == emailController.text,
+                              orElse: () => UserModel(),
+                            );
 
-                            if (users.isEmpty) {
+                            if (users.isEmpty || userWithEmail.id == null) {
                               setState(() {
                                 isLoading = false;
                               });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  backgroundColor: Colors.red,
-                                  content: Text("No users found"),
-                                ),
-                              );
+                              _showSnackbar("No users found", Colors.red);
+                            } else if (userWithEmail.password !=
+                                passwordController.text) {
+                              _showSnackbar(
+                                  "Password is incorrect", Colors.red);
+                              setState(() {
+                                isLoading = false;
+                              });
                             } else {
                               try {
                                 final matchedUser = users.firstWhere(
@@ -219,12 +235,8 @@ class _LoginViewState extends State<LoginView> {
                                 userBloc.add(
                                     GetLoginRequest(matchedUser.id ?? "0"));
                               } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      backgroundColor: Colors.red,
-                                      content: Text(
-                                          "Email or password is incorrect")),
-                                );
+                                _showSnackbar("Email or password is incorrect",
+                                    Colors.red);
                                 setState(() {
                                   isLoading = false;
                                 });

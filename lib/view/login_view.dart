@@ -172,7 +172,7 @@ class _LoginViewState extends State<LoginView> {
                         );
 
                         _showSnackbar("Login successful", Colors.green);
-                        _navigateTo('/home');
+                        _navigateTo('/main');
                       }
 
                       if (state is GetLoginError) {

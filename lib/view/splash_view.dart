@@ -25,7 +25,7 @@ class _SplashViewState extends State<SplashView> {
     if (!mounted) return;
 
     if (isLoggedIn) {
-      GoRouter.of(context).go('/home');
+      GoRouter.of(context).go('/main');
     } else {
       GoRouter.of(context).go('/login');
     }

@@ -163,6 +163,8 @@ class _LoginViewState extends State<LoginView> {
                       if (state is GetLoginSuccess) {
                         final user = userBloc.userData;
 
+                        debugPrint("Cek user data: ${user?.toJson()}, userid : ${user?.id} , email: ${user?.email}");
+
                         await SessionManager().saveUserSession(
                           user?.id ?? '',
                           user?.email ?? '',

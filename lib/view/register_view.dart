@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:recipes/bloc/register/register_bloc.dart';
+import 'package:recipes/model/user_model.dart';
 import 'package:recipes/theme/app_colors.dart';
 
 class RegisterView extends StatefulWidget {
@@ -13,10 +16,12 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
+  RegisterBloc registerBloc = RegisterBloc();
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool isPasswordVisible = false;
+  bool isLoading = false;
 
   final picker = ImagePicker();
   String image = "Photo Profile";
@@ -57,12 +62,13 @@ class _RegisterViewState extends State<RegisterView> {
       setState(() {
         imageUrl = urlDownload;
       });
-      
+
       debugPrint('Direct Image Link: $urlDownload');
     } else {
       debugPrint('No file selected');
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -231,23 +237,88 @@ class _RegisterViewState extends State<RegisterView> {
                   const SizedBox(
                     height: 16,
                   ),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.color600,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  BlocConsumer(
+                    bloc: registerBloc,
+                    listener: (context, state) {
+                      if (state is PostRegisterWaiting) {
+                        setState(() {
+                          isLoading = true;
+                        });
+                      }
+
+                      if (state is PostRegisterSuccess) {
+                        Future.microtask(() {
+                          GoRouter.of(context).go('/login');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Registration successful !'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        });
+                      }
+
+                      if (state is PostRegisterError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text(state.errorMessage ?? "An error occurred"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    },
+                    builder: (context, state) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (nameController.text.isEmpty ||
+                                emailController.text.isEmpty ||
+                                passwordController.text.isEmpty ||
+                                pickedImage == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please fill all fields !'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
+                            UserModel user = UserModel(
+                              name: nameController.text,
+                              email: emailController.text,
+                              password: passwordController.text,
+                              imageUrl: imageUrl,
+                            );
+
+                            registerBloc
+                                .add(PostRegisterRequest(viewModel: user));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.color600,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: isLoading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  'Register',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.white),
+                                ),
                         ),
-                      ),
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(
                     height: 16,

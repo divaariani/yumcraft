@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:recipes/bloc/user/user_bloc.dart';
 import 'package:recipes/theme/app_colors.dart';
 import 'package:recipes/utils/app_session_manager.dart';
@@ -16,6 +17,12 @@ class _HomeViewState extends State<HomeView> {
   String? userId;
   String? userName;
   String? userPhoto;
+  List<String> categories = [
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Snack",
+  ];
 
   @override
   void initState() {
@@ -35,6 +42,19 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          GoRouter.of(context).push('/form-food');
+        },
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        backgroundColor: AppColors.color600,
+        child: const Icon(
+          Icons.add,
+          color: AppColors.color200,
+        ),
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -140,35 +160,84 @@ class _HomeViewState extends State<HomeView> {
           ],
         ),
         const SizedBox(
+          height: 32,
+        ),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Categories',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+            ),
+          ],
+        ),
+        const SizedBox(
           height: 16,
         ),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-          decoration: BoxDecoration(
-            color: AppColors.color100,
-            borderRadius: BorderRadius.circular(16),
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 3 / 3,
           ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final item = categories[index];
+
+            return GestureDetector(
+              onTap: () {
+                // GoRouter.of(context).push(
+                //   '/category',
+                //   extra: item,
+                // );
+              },
+              child: Container(
+                width: 100,
+                height: 100,
+                // margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.color200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Image.asset(
+                      "assets/$item.png",
+                      width: 80,
+                      height: 80,
+                      color: AppColors.color600,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.fastfood, color: Colors.white),
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
                     Text(
-                      'card',
-                      style: TextStyle(
-                        fontSize: 24,
+                      item,
+                      style: const TextStyle(
+                        color: AppColors.color600,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
+            );
+          },
+        )
       ],
     );
   }
